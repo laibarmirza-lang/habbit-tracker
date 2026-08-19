@@ -1,0 +1,4406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Habit Racer 28 Day Challenge</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a111e">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Habit Racer">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+*{box-sizing:border-box}
+
+:root{
+  --accent:#ff4037;
+  --gold:#ffc52d;
+  --bg:#060a12;
+  --panel:#101827;
+  --line:#31415d;
+  --text:#f7f8ff;
+}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at 70% 5%,#293c76,#070b14 48%,#03050a);
+  font-family:Inter,Arial,sans-serif;
+  color:var(--text)
+}
+
+button{font:inherit}
+
+.app{
+  max-width:1500px;
+  margin:auto;
+  padding:16px;
+  display:grid;
+  grid-template-columns:330px 1fr;
+  gap:15px
+}
+
+/* SOUND TOGGLE — fixed to viewport, completely out of the
+   grid/flex flow so it can never affect page responsiveness */
+.soundToggle{
+  position:fixed;
+  top:14px;
+  right:14px;
+  z-index:600;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:1px solid #ffc52d88;
+  background:linear-gradient(145deg,#241d10,#161207);
+  color:#ffd569;
+  font-size:19px;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  box-shadow:0 8px 20px #0007;
+  padding:0
+}
+
+.soundToggle.on{
+  border-color:#52d56a;
+  color:#8CFFA6;
+  box-shadow:0 0 16px #52d56a55
+}
+
+@media(max-width:560px){
+  .soundToggle{
+    width:38px;
+    height:38px;
+    font-size:15px;
+    top:8px;
+    right:8px
+  }
+}
+
+.sidebar,.main{
+  background:#0a111ee8;
+  border:1px solid #344461;
+  border-radius:22px;
+  box-shadow:0 20px 70px #0008;
+  overflow:hidden
+}
+
+.sidebar{padding:18px}
+
+.logo{
+  font-size:24px;
+  font-weight:900;
+  font-style:italic;
+  display:flex;
+  gap:10px;
+  align-items:center
+}
+
+.logo span{font-size:32px}
+
+.redline{
+  height:3px;
+  background:var(--accent);
+  margin:15px -18px
+}
+
+.dayTitle{
+  text-align:center;
+  font-size:22px;
+  font-weight:900;
+  margin:12px 0
+}
+
+.dayTitle b{color:var(--accent)}
+
+.habits{
+  display:grid;
+  gap:8px
+}
+
+.habit{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:11px;
+  border:1px solid var(--line);
+  background:linear-gradient(145deg,#18253b,#0e1727);
+  border-radius:14px;
+  cursor:pointer;
+  transition:.2s
+}
+
+.habit:hover{transform:translateX(3px)}
+
+.habit.done{
+  border-color:#3c9250;
+  background:#10251c
+}
+
+.icon{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font-size:21px;
+  background:#315ec2;
+  flex:none
+}
+
+.habit:nth-child(2) .icon{background:#9b661a}
+.habit:nth-child(3) .icon{background:#5a3d91}
+.habit:nth-child(4) .icon{background:#2d7752}
+.habit:nth-child(5) .icon{background:#8c332d}
+.habit:nth-child(6) .icon{background:#1a7a8c}
+.habit:nth-child(7) .icon{background:#b23d6b}
+
+.ht{
+  flex:1;
+  font-size:14px;
+  font-weight:800;
+  line-height:1.25
+}
+
+.check{
+  width:25px;
+  height:25px;
+  border:2px solid #62718c;
+  border-radius:5px;
+  display:grid;
+  place-items:center;
+  font-weight:900
+}
+
+.done .check{
+  background:#52d56a;
+  border-color:#52d56a;
+  color:#07120a
+}
+
+/* SUBMIT BUTTON */
+
+.submitDay{
+  width:100%;
+  margin-top:12px;
+  border:0;
+  border-radius:12px;
+  padding:13px;
+  background:linear-gradient(90deg,#ff4037,#ff7a35);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 8px 25px #ff403744;
+  transition:.2s
+}
+
+.submitDay:hover{
+  transform:translateY(-2px)
+}
+
+.submitDay.submitted{
+  background:linear-gradient(90deg,#32b85b,#54d96f);
+}
+
+/* PROGRESS */
+
+.progress{
+  margin-top:15px;
+  border:1px dashed #e04a42;
+  border-radius:14px;
+  padding:14px
+}
+
+.phead{
+  display:flex;
+  justify-content:space-between;
+  color:#aab6ca;
+  font-size:12px
+}
+
+.bar{
+  height:12px;
+  background:#273348;
+  border-radius:99px;
+  overflow:hidden;
+  margin:10px 0
+}
+
+.bar i{
+  display:block;
+  width:0;
+  height:100%;
+  background:linear-gradient(90deg,#e6322e,#ffc22d);
+  transition:.8s
+}
+
+.pct{
+  text-align:center;
+  font-size:28px;
+  font-weight:900;
+  color:#ff5148
+}
+
+/* SECRET */
+
+.secretBox{
+  margin-top:15px;
+  border:1px dashed #8a5cff;
+  border-radius:14px;
+  padding:12px
+}
+
+.secretBox h4{
+  margin:0 0 8px;
+  text-align:center;
+  font-size:13px;
+  color:#c9b8ff;
+  letter-spacing:.5px
+}
+
+.secretList{
+  display:grid;
+  gap:7px
+}
+
+.secretItem{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:9px;
+  border:1px solid var(--line);
+  background:linear-gradient(145deg,#1c1b3b,#12112b);
+  border-radius:12px;
+  cursor:pointer;
+  transition:.2s
+}
+
+.secretItem:hover{transform:translateX(3px)}
+
+.secretItem.done{
+  border-color:#8a5cff;
+  background:#241a3f
+}
+
+.secretIcon{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#5a3d91;
+  flex:none;
+  font-size:16px
+}
+
+.secretText{
+  flex:1;
+  font-size:13px;
+  font-weight:700
+}
+
+.secretCheck{
+  width:22px;
+  height:22px;
+  border:2px solid #62718c;
+  border-radius:5px;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  font-size:12px
+}
+
+.secretItem.done .secretCheck{
+  background:#8a5cff;
+  border-color:#8a5cff;
+  color:#fff
+}
+
+.secretReward{
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  text-align:center;
+  border-radius:10px;
+  background:linear-gradient(145deg,#2a1f4d,#181234);
+  border:1px solid #8a5cff;
+  font-size:12px;
+  line-height:1.5
+}
+
+.secretReward.show{
+  display:block;
+  animation:pop .45s ease
+}
+
+.secretReward button{
+  margin-top:8px;
+  background:#8a5cff;
+  border:0;
+  border-radius:8px;
+  padding:8px 16px;
+  font-weight:900;
+  cursor:pointer;
+  color:#fff
+}
+
+/* COINS */
+
+.coinsBox{
+  margin-top:15px;
+  border:1px solid #ffc52d55;
+  border-radius:14px;
+  padding:14px;
+  background:linear-gradient(145deg,#2a2110,#181307)
+}
+
+.coinsHead{
+  text-align:center;
+  font-size:12px;
+  color:#ffd569;
+  font-weight:800;
+  letter-spacing:.5px
+}
+
+.coinsTotal{
+  text-align:center;
+  font-size:34px;
+  font-weight:900;
+  color:#ffc52d;
+  margin:4px 0
+}
+
+.coinsSub{
+  text-align:center;
+  font-size:11px;
+  color:#c9b98a;
+  margin-bottom:10px
+}
+
+.levelName{
+  text-align:center;
+  font-size:13px;
+  font-weight:800;
+  margin-bottom:6px
+}
+
+.levelTrack{
+  height:9px;
+  background:#3a2f14;
+  border-radius:99px;
+  overflow:hidden
+}
+
+.levelTrack i{
+  display:block;
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,#ffc52d,#ff8a2d);
+  transition:.6s
+}
+
+.levelSub{
+  text-align:center;
+  font-size:10px;
+  color:#a99a6f;
+  margin-top:6px
+}
+
+/* LEVEL REWARDS PANEL */
+
+.levelsPanel{
+  margin-top:15px;
+  border:1px solid #ffc52d55;
+  border-radius:14px;
+  padding:12px;
+  background:linear-gradient(145deg,#241d10,#161207)
+}
+
+.levelsPanel h4{
+  text-align:center;
+  margin:0 0 9px;
+  font-size:13px;
+  color:#ffd569;
+  letter-spacing:.5px
+}
+
+.levelsList{
+  display:grid;
+  gap:7px
+}
+
+.levelRow{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#12192a;
+  transition:.2s
+}
+
+.levelRow.unlocked{
+  border-color:#ffc52d
+}
+
+.levelRow.claimed{
+  border-color:#52d56a;
+  background:#122417
+}
+
+.levelIcon{
+  font-size:19px;
+  width:30px;
+  text-align:center;
+  flex:none
+}
+
+.levelInfo{flex:1;min-width:0}
+
+.levelRowName{
+  font-size:12.5px;
+  font-weight:800
+}
+
+.levelRowTarget{
+  font-size:10.5px;
+  color:#9aa7bd
+}
+
+.levelBtn{
+  border:0;
+  border-radius:8px;
+  padding:7px 10px;
+  font-weight:900;
+  font-size:10.5px;
+  cursor:pointer;
+  background:#ffc52d;
+  color:#231a06;
+  white-space:nowrap;
+  flex:none
+}
+
+.levelBtn:disabled{
+  cursor:default;
+  opacity:.5;
+  background:#3a4460;
+  color:#c7d0e0
+}
+
+.levelBtn.claimedBtn{
+  background:#52d56a;
+  color:#07240f;
+  opacity:1
+}
+
+/* TOP COINS */
+
+.topCoins{
+  background:linear-gradient(145deg,#33280c,#1d1608);
+  border:1px solid #ffc52d;
+  color:#ffd447;
+  padding:9px 14px;
+  border-radius:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+/* WEEK */
+
+.weeks{
+  margin-top:14px
+}
+
+.weeks h4{
+  text-align:center;
+  margin:0 0 9px
+}
+
+.weekGrid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px
+}
+
+.weekBtn,.dayBtn{
+  border:1px solid #394a67;
+  background:#111b2c;
+  color:#e4e9f4;
+  border-radius:9px;
+  padding:9px 4px;
+  cursor:pointer;
+  font-weight:900;
+  font-size:11px
+}
+
+.active{
+  background:var(--accent)!important;
+  border-color:var(--accent)!important;
+  color:white
+}
+
+.dayBtn.locked,.weekBtn.locked{
+  opacity:.45;
+  cursor:not-allowed
+}
+
+.reset{
+  width:100%;
+  margin-top:10px;
+  background:transparent;
+  color:#9eabc0;
+  border:1px solid #455571;
+  border-radius:9px;
+  padding:8px;
+  cursor:pointer
+}
+
+/* MODAL */
+
+.modalOverlay{
+  position:fixed;
+  inset:0;
+  background:#03050ad9;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  padding:20px
+}
+
+.modalOverlay.show{display:flex}
+
+.modalBox{
+  background:#101827;
+  border:2px solid #ff4037;
+  border-radius:20px;
+  padding:26px;
+  max-width:340px;
+  text-align:center;
+  box-shadow:0 20px 60px #000a
+}
+
+.modalBox.goldBox{
+  border-color:#ffc52d
+}
+
+.modalEmoji{font-size:54px}
+
+.modalBox h3{
+  margin:8px 0 6px;
+  color:#ff6a5e
+}
+
+.modalBox.goldBox h3{
+  color:#ffd347
+}
+
+.modalBox p{
+  color:#d0d8e7;
+  font-size:13px;
+  line-height:1.5;
+  margin:0 0 16px
+}
+
+.modalBox button{
+  background:#ff4037;
+  border:0;
+  border-radius:10px;
+  padding:10px 24px;
+  font-weight:900;
+  color:#fff;
+  cursor:pointer
+}
+
+.modalBox.goldBox button{
+  background:#ffc52d;
+  color:#231a06
+}
+
+/* MAIN */
+
+.top{
+  padding:13px 15px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  border-bottom:1px solid #2e3d58
+}
+
+.days{
+  display:flex;
+  gap:6px;
+  overflow:auto;
+  flex:1
+}
+
+.dayBtn{min-width:72px;font-size:12px}
+
+.trophy{font-size:29px}
+
+.scene{
+  height:680px;
+  position:relative;
+  overflow:hidden;
+  background:#0a1220
+}
+
+#three-canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  z-index:1
+}
+
+.banner{
+  position:absolute;
+  z-index:10;
+  top:12px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:9px 48px;
+  background:linear-gradient(145deg,#1c2b4b,#0d1422);
+  border:2px solid var(--accent);
+  clip-path:polygon(8% 0,92% 0,100% 50%,92% 100%,8% 100%,0 50%);
+  font-size:22px;
+  font-weight:900;
+  font-style:italic
+}
+
+.themeLabel{
+  position:absolute;
+  z-index:8;
+  left:20px;
+  top:20px;
+  background:#091321cc;
+  padding:8px 13px;
+  border:1px solid #ffffff33;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:800
+}
+
+.weekTag{
+  position:absolute;
+  z-index:8;
+  right:20px;
+  top:20px;
+  background:#091321cc;
+  padding:8px 13px;
+  border:1px solid #ffffff33;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:800
+}
+
+.message{
+  position:absolute;
+  z-index:20;
+  top:68px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:10px 18px;
+  background:#101a2bee;
+  border:1px solid #607294;
+  border-radius:99px;
+  opacity:0;
+  transition:.25s
+}
+
+.message.show{opacity:1}
+
+.reward{
+  position:absolute;
+  z-index:30;
+  right:22px;
+  bottom:22px;
+  width:260px;
+  padding:17px;
+  text-align:center;
+  border-radius:19px;
+  background:#09111eeF;
+  border:2px solid #ffc62f;
+  box-shadow:0 0 30px #ffc62f55;
+  transform:translateY(150%);
+  opacity:0;
+  transition:.5s
+}
+
+.reward.show{
+  transform:translateY(0);
+  opacity:1
+}
+
+.cup{font-size:62px}
+
+.reward h2{
+  margin:3px;
+  color:#ffd12e
+}
+
+.reward p{
+  color:#d0d8e7;
+  line-height:1.4
+}
+
+.claim{
+  background:#ffbd22;
+  border:0;
+  border-radius:10px;
+  padding:11px 22px;
+  font-weight:900;
+  cursor:pointer
+}
+
+.doneBtn{
+  display:none;
+  margin-top:10px;
+  background:#3d9455;
+  border:0;
+  border-radius:10px;
+  padding:10px 22px;
+  font-weight:900;
+  cursor:pointer;
+  color:#fff
+}
+
+.gift{
+  display:none;
+  margin-top:12px;
+  padding:13px;
+  border-radius:13px;
+  background:linear-gradient(145deg,#211b11,#101827);
+  border:1px solid #ffc52d
+}
+
+.gift.show{
+  display:block;
+  animation:pop .45s ease
+}
+
+.giftEmoji{font-size:65px}
+
+.gift h3{
+  margin:2px;
+  color:#ffd12d
+}
+
+@keyframes pop{
+  0%{transform:scale(.7)}
+  70%{transform:scale(1.08)}
+  100%{transform:scale(1)}
+}
+
+.belowScene{
+  padding:15px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+  align-items:start
+}
+
+.belowScene .coinsBox,
+.belowScene .levelsPanel{
+  margin-top:0
+}
+
+.footer{
+  text-align:center;
+  color:#9ba8bc;
+  padding:9px;
+  font-size:13px
+}
+
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{order:2}
+  .main{order:1}
+  .scene{height:590px}
+  .reward{width:225px}
+}
+
+@media(max-width:700px){
+  .belowScene{
+    grid-template-columns:1fr
+  }
+}
+
+@media(max-width:560px){
+  .app{padding:7px}
+  .scene{height:570px}
+  .reward{
+    right:10px;
+    bottom:10px;
+    width:205px
+  }
+  .banner{
+    font-size:17px;
+    padding:8px 28px
+  }
+  .belowScene{
+    padding:10px;
+    gap:10px
+  }
+}
+</style>
+</head>
+
+<body>
+
+<button class="soundToggle" id="soundToggle" title="Sound off (tap to enable)">
+🔈
+</button>
+
+<div class="app">
+
+<aside class="sidebar">
+
+<div class="logo">
+<span>🏁</span> HABIT TRACKER
+</div>
+
+<div class="redline"></div>
+
+<div class="dayTitle">
+DAY <b id="sideDay">1</b> OF 28
+</div>
+
+<div class="habits" id="habits"></div>
+
+<button class="submitDay" id="submitDay">
+🏁 SUBMIT DAY
+</button>
+
+<div class="secretBox">
+
+<h4>🕵️ SECRET MISSIONS</h4>
+
+<div class="secretList" id="secretList"></div>
+
+<div class="secretReward" id="secretReward">
+
+🎉 <b>SECRET BONUS UNLOCKED!</b>
+
+<br><br>
+
+🥨 You earned a special snack reward! 🍫
+
+<br>
+
+<b>Snack Reward: Your Favorite Snack 😋</b>
+
+<br>
+
+<small>+45 bonus coins</small>
+
+<br>
+
+<button id="secretClaim">
+CLAIM SNACK 🎁
+</button>
+
+<button id="secretRewardClose" style="display:none;margin-top:8px;background:#455571;color:#fff">
+Close ✕
+</button>
+
+</div>
+
+</div>
+
+<div class="progress">
+
+<div class="phead">
+<span>DAY PROGRESS</span>
+<span id="count">0/7</span>
+</div>
+
+<div class="bar">
+<i id="bar"></i>
+</div>
+
+<div class="pct" id="pct">0%</div>
+
+</div>
+
+<div class="weeks">
+
+<h4>WEEK SELECTOR</h4>
+
+<div class="weekGrid" id="weeks"></div>
+
+</div>
+
+<button class="reset" id="reset">
+Reset current day
+</button>
+
+</aside>
+
+
+<main class="main">
+
+<div class="top">
+
+<div class="days" id="days"></div>
+
+<div class="topCoins">
+🪙 <span id="topCoins">0</span>
+</div>
+
+<div class="trophy">🏆</div>
+
+</div>
+
+<section class="scene" id="scene">
+
+<canvas id="three-canvas"></canvas>
+
+<div class="themeLabel" id="themeLabel">
+DAY 1 • SUNSET CITY
+</div>
+
+<div class="weekTag" id="weekTag">
+🏁 RACE MODE
+</div>
+
+<div class="banner" id="banner">
+WEEK 1
+</div>
+
+<div class="message" id="message"></div>
+
+<div class="reward" id="reward">
+
+<div class="cup">🏆</div>
+
+<h2>DAY COMPLETE!</h2>
+
+<p>
+All 7 habits completed.<br>
+Your reward is unlocked!
+</p>
+
+<button class="claim" id="claim">
+CLAIM REWARD ✨
+</button>
+
+<div class="gift" id="gift">
+
+<div class="giftEmoji" id="giftEmoji">🍫</div>
+
+<h3 id="giftTitle">
+Favorite Chocolate
+</h3>
+
+<div id="giftText">
+You earned your reward!
+</div>
+
+</div>
+
+<button class="doneBtn" id="rewardDone">
+Done ✅
+</button>
+
+</div>
+
+</section>
+
+<div class="belowScene" id="belowScene">
+
+<div class="coinsBox">
+
+<div class="coinsHead">
+🪙 COINS COLLECTED
+</div>
+
+<div class="coinsTotal" id="coinsTotal">
+0
+</div>
+
+<div class="coinsSub">
++5 coins per habit • +15 per secret mission
+</div>
+
+<div class="levelName" id="levelName">
+🥈 Level 1 • Silver
+</div>
+
+<div class="levelTrack">
+<i id="levelBar"></i>
+</div>
+
+<div class="levelSub" id="levelSub"></div>
+
+</div>
+
+<div class="levelsPanel">
+
+<h4>🏆 LEVEL REWARDS</h4>
+
+<div class="levelsList" id="levelsList"></div>
+
+</div>
+
+</div>
+
+<div class="footer">
+Small habits. Big changes. One day at a time. 🏁⚽
+</div>
+
+</main>
+
+</div>
+
+
+<!-- MISSED DAY POPUP -->
+
+<div class="modalOverlay" id="missPopup">
+
+<div class="modalBox">
+
+<div class="modalEmoji">😔</div>
+
+<h3>
+Better luck next time!
+</h3>
+
+<p id="missPopupText">
+You didn't complete all 7 habits today.
+Tomorrow is another chance — keep going! 💪
+</p>
+
+<button id="missPopupClose">
+OK, Got it!
+</button>
+
+</div>
+
+</div>
+
+
+<!-- LEVEL GRAND REWARD POPUP -->
+
+<div class="modalOverlay" id="levelRewardPopup">
+
+<div class="modalBox goldBox">
+
+<div class="modalEmoji" id="levelRewardEmoji">🎁</div>
+
+<h3 id="levelRewardTitle">
+Level Reward!
+</h3>
+
+<p id="levelRewardText">
+You unlocked a grand reward!
+</p>
+
+<button id="levelRewardClose">
+Awesome! ✕
+</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   HABITS
+========================================================= */
+
+const habits=[
+["💧","Drink 8 Glasses","of Water"],
+["🏃","30 Min Exercise",""],
+["📖","Read 20 Pages",""],
+["🧘","Meditate 10 Minutes",""],
+["🎯","Complete Top Priority","Task"],
+["😴","Sleep 8 Hours",""],
+["📵","30 Min Screen-Free","Time"]
+];
+
+
+/* =========================================================
+   AUDIO SYSTEM
+   - Looping background music while the tab is open & visible
+   - Engine rev sound whenever a habit is completed (car/player
+     moves forward)
+   - Short click sound on every button / tile tap
+   - "Well done Umar" voice line when all 7 habits are done
+
+   Sound is OFF by default (browsers block autoplay audio
+   without a user gesture anyway). The small floating speaker
+   button (top-right, fixed position, outside the page layout
+   so it never affects responsiveness) turns it on/off.
+
+   Audio automatically stops the moment the tab is hidden,
+   backgrounded, or the page is closed/navigated away from —
+   so it never keeps playing after you've left.
+========================================================= */
+
+/* Warm up the speech voice list as early as possible. On many
+   mobile browsers (especially Android Chrome) the voice list
+   loads asynchronously and is empty for the first second or
+   two after page load — calling getVoices() early, and again
+   once onvoiceschanged fires, makes sure voices are ready by
+   the time the "Well done Umar" line needs to speak. */
+
+if("speechSynthesis" in window){
+
+window.speechSynthesis.getVoices();
+
+window.speechSynthesis.onvoiceschanged=()=>{
+
+window.speechSynthesis.getVoices();
+
+};
+
+}
+
+let audioCtx=null;
+let musicGain=null;
+let musicFilter=null;
+let musicTimer=null;
+let musicStarted=false;
+let speechUnlocked=false;
+let soundEnabled=false;
+
+let engineOsc=null;
+let engineGain=null;
+let engineFilter=null;
+
+function ensureAudioContext(){
+
+const AC=window.AudioContext||window.webkitAudioContext;
+
+if(!AC){
+return false;
+}
+
+if(!audioCtx){
+
+audioCtx=new AC();
+
+musicGain=audioCtx.createGain();
+
+musicGain.gain.value=0.13;
+
+musicFilter=audioCtx.createBiquadFilter();
+
+musicFilter.type="lowpass";
+
+musicFilter.frequency.value=1400;
+
+musicFilter.connect(musicGain);
+
+musicGain.connect(audioCtx.destination);
+
+setupEngine();
+
+}
+
+if(audioCtx.state==="suspended"){
+
+audioCtx.resume();
+
+}
+
+if(!speechUnlocked){
+
+speechUnlocked=true;
+
+try{
+
+if("speechSynthesis" in window){
+
+const primer=new SpeechSynthesisUtterance(" ");
+
+primer.volume=0;
+
+window.speechSynthesis.speak(primer);
+
+}
+
+}catch(e){}
+
+}
+
+return true;
+
+}
+
+function startBackgroundMusic(){
+
+if(musicStarted||!audioCtx){
+return;
+}
+
+musicStarted=true;
+
+/* Slow, gentle pentatonic pad — soft sine tones with long
+   fades in/out so notes overlap smoothly instead of ticking
+   by quickly. Feels calm/soothing rather than energetic. */
+
+const melody=[
+261.63,293.66,329.63,392.00,
+440.00,392.00,329.63,293.66,
+261.63,293.66,329.63,392.00,
+329.63,293.66,261.63,220.00
+];
+
+let step=0;
+
+function playNote(){
+
+if(!audioCtx||!soundEnabled){
+return;
+}
+
+const freq=melody[step%melody.length];
+
+const t=audioCtx.currentTime;
+
+const osc=audioCtx.createOscillator();
+
+const g=audioCtx.createGain();
+
+osc.type="sine";
+
+osc.frequency.value=freq;
+
+g.gain.value=0;
+
+osc.connect(g);
+
+g.connect(musicFilter);
+
+g.gain.linearRampToValueAtTime(0.55,t+0.9);
+
+g.gain.linearRampToValueAtTime(0,t+2.6);
+
+osc.start(t);
+
+osc.stop(t+2.7);
+
+const shimmer=audioCtx.createOscillator();
+
+const shimmerG=audioCtx.createGain();
+
+shimmer.type="sine";
+
+shimmer.frequency.value=freq*2;
+
+shimmerG.gain.value=0;
+
+shimmer.connect(shimmerG);
+
+shimmerG.connect(musicFilter);
+
+shimmerG.gain.linearRampToValueAtTime(0.12,t+1);
+
+shimmerG.gain.linearRampToValueAtTime(0,t+2.6);
+
+shimmer.start(t);
+
+shimmer.stop(t+2.7);
+
+const bassOsc=audioCtx.createOscillator();
+
+const bassG=audioCtx.createGain();
+
+bassOsc.type="sine";
+
+bassOsc.frequency.value=freq/4;
+
+bassG.gain.value=0;
+
+bassOsc.connect(bassG);
+
+bassG.connect(musicFilter);
+
+bassG.gain.linearRampToValueAtTime(0.35,t+1);
+
+bassG.gain.linearRampToValueAtTime(0,t+2.6);
+
+bassOsc.start(t);
+
+bassOsc.stop(t+2.7);
+
+step++;
+
+}
+
+playNote();
+
+musicTimer=setInterval(playNote,1500);
+
+}
+
+function stopBackgroundMusic(){
+
+musicStarted=false;
+
+if(musicTimer){
+
+clearInterval(musicTimer);
+
+musicTimer=null;
+
+}
+
+}
+
+function setupEngine(){
+
+if(!audioCtx){
+return;
+}
+
+engineOsc=audioCtx.createOscillator();
+
+engineFilter=audioCtx.createBiquadFilter();
+
+engineGain=audioCtx.createGain();
+
+engineOsc.type="sawtooth";
+
+engineOsc.frequency.value=50;
+
+engineFilter.type="lowpass";
+
+engineFilter.frequency.value=400;
+
+engineGain.gain.value=0.0001;
+
+engineOsc.connect(engineFilter);
+
+engineFilter.connect(engineGain);
+
+engineGain.connect(audioCtx.destination);
+
+engineOsc.start();
+
+}
+
+function muteEngineNow(){
+
+if(engineGain&&audioCtx){
+
+try{
+
+const t=audioCtx.currentTime;
+
+engineGain.gain.cancelScheduledValues(t);
+
+engineGain.gain.setValueAtTime(0.0001,t);
+
+}catch(e){}
+
+}
+
+}
+
+function playEngineRev(){
+
+if(!soundEnabled||!audioCtx||!engineOsc||!engineGain){
+return;
+}
+
+const t=audioCtx.currentTime;
+
+engineOsc.frequency.cancelScheduledValues(t);
+
+engineOsc.frequency.setValueAtTime(55,t);
+
+engineOsc.frequency.linearRampToValueAtTime(150,t+0.18);
+
+engineOsc.frequency.linearRampToValueAtTime(70,t+0.6);
+
+engineGain.gain.cancelScheduledValues(t);
+
+engineGain.gain.setValueAtTime(0.0001,t);
+
+engineGain.gain.linearRampToValueAtTime(0.42,t+0.1);
+
+engineGain.gain.linearRampToValueAtTime(0.0001,t+0.7);
+
+}
+
+function playClick(){
+
+if(!soundEnabled||!audioCtx){
+return;
+}
+
+const t=audioCtx.currentTime;
+
+const osc=audioCtx.createOscillator();
+
+const g=audioCtx.createGain();
+
+osc.type="sine";
+
+osc.frequency.setValueAtTime(950,t);
+
+osc.frequency.exponentialRampToValueAtTime(500,t+0.09);
+
+osc.connect(g);
+
+g.connect(audioCtx.destination);
+
+g.gain.setValueAtTime(0.001,t);
+
+g.gain.linearRampToValueAtTime(0.11,t+0.012);
+
+g.gain.exponentialRampToValueAtTime(0.001,t+0.13);
+
+osc.start(t);
+
+osc.stop(t+0.14);
+
+}
+
+/* Exciting "yay / hurray" fanfare — used whenever a reward
+   (daily reward, secret snack, or level reward) is claimed. */
+
+function playRewardSound(){
+
+if(!soundEnabled||!audioCtx){
+return;
+}
+
+const notes=[523.25,659.25,783.99,1046.50];
+
+const startT=audioCtx.currentTime;
+
+notes.forEach((freq,i)=>{
+
+const t=startT+i*0.11;
+
+const osc=audioCtx.createOscillator();
+
+const g=audioCtx.createGain();
+
+osc.type="triangle";
+
+osc.frequency.value=freq;
+
+osc.connect(g);
+
+g.connect(audioCtx.destination);
+
+g.gain.setValueAtTime(0.0001,t);
+
+g.gain.linearRampToValueAtTime(0.22,t+0.03);
+
+g.gain.exponentialRampToValueAtTime(0.0001,t+0.35);
+
+osc.start(t);
+
+osc.stop(t+0.36);
+
+});
+
+const sparkleOsc=audioCtx.createOscillator();
+
+const sparkleG=audioCtx.createGain();
+
+sparkleOsc.type="sine";
+
+sparkleOsc.frequency.setValueAtTime(1046.5,startT+0.4);
+
+sparkleOsc.frequency.exponentialRampToValueAtTime(2093,startT+0.75);
+
+sparkleOsc.connect(sparkleG);
+
+sparkleG.connect(audioCtx.destination);
+
+sparkleG.gain.setValueAtTime(0.0001,startT+0.4);
+
+sparkleG.gain.linearRampToValueAtTime(0.15,startT+0.45);
+
+sparkleG.gain.exponentialRampToValueAtTime(0.0001,startT+0.8);
+
+sparkleOsc.start(startT+0.4);
+
+sparkleOsc.stop(startT+0.82);
+
+}
+
+/* Gentle "aww, better luck next time" sound — a soft, short
+   descending tone (not harsh/sad, just a mild "better luck
+   next time" cue). Used only when the miss popup appears. */
+
+function playMissSound(){
+
+if(!soundEnabled||!audioCtx){
+return;
+}
+
+const t=audioCtx.currentTime;
+
+const notes=[440.00,349.23,293.66];
+
+notes.forEach((freq,i)=>{
+
+const nt=t+i*0.16;
+
+const osc=audioCtx.createOscillator();
+
+const g=audioCtx.createGain();
+
+osc.type="sine";
+
+osc.frequency.value=freq;
+
+osc.connect(g);
+
+g.connect(audioCtx.destination);
+
+g.gain.setValueAtTime(0.0001,nt);
+
+g.gain.linearRampToValueAtTime(0.16,nt+0.03);
+
+g.gain.exponentialRampToValueAtTime(0.0001,nt+0.3);
+
+osc.start(nt);
+
+osc.stop(nt+0.32);
+
+});
+
+}
+
+function speakWellDoneUmar(){
+
+if(!soundEnabled){
+return;
+}
+
+if(!("speechSynthesis" in window)){
+return;
+}
+
+try{
+
+const u=new SpeechSynthesisUtterance("Well done, Umar! Woohoo! You did it!");
+
+u.lang="en-US";
+
+u.pitch=1.35;
+
+u.rate=1.05;
+
+u.volume=1;
+
+window.speechSynthesis.speak(u);
+
+}catch(e){}
+
+}
+
+function stopAllSoundHard(){
+
+soundEnabled=false;
+
+stopBackgroundMusic();
+
+muteEngineNow();
+
+try{
+
+if("speechSynthesis" in window){
+
+window.speechSynthesis.cancel();
+
+}
+
+}catch(e){}
+
+}
+
+/* Auto-stop the moment the tab is hidden/backgrounded, and
+   resume automatically when it becomes visible again — this
+   is what stops music from playing after you've closed or
+   left the page. */
+
+document.addEventListener("visibilitychange",()=>{
+
+if(document.hidden){
+
+if(soundEnabled){
+
+stopBackgroundMusic();
+
+muteEngineNow();
+
+try{
+
+if("speechSynthesis" in window){
+
+window.speechSynthesis.cancel();
+
+}
+
+}catch(e){}
+
+}
+
+}else{
+
+if(soundEnabled&&audioCtx){
+
+if(audioCtx.state==="suspended"){
+
+audioCtx.resume();
+
+}
+
+startBackgroundMusic();
+
+}
+
+}
+
+});
+
+/* Extra safety net: fully stop and release audio on page
+   unload/close so nothing lingers. */
+
+window.addEventListener("pagehide",()=>{
+
+stopAllSoundHard();
+
+if(audioCtx){
+
+try{
+
+audioCtx.close();
+
+}catch(e){}
+
+}
+
+});
+
+function updateSoundButton(){
+
+const btn=document.getElementById("soundToggle");
+
+if(!btn){
+return;
+}
+
+btn.textContent=soundEnabled?"🔊":"🔈";
+
+btn.classList.toggle("on",soundEnabled);
+
+btn.title=soundEnabled?"Sound on (tap to mute)":"Sound off (tap to enable)";
+
+}
+
+function enableSound(){
+
+const ok=ensureAudioContext();
+
+soundEnabled=ok;
+
+if(ok){
+
+startBackgroundMusic();
+
+}
+
+updateSoundButton();
+
+}
+
+function disableSound(){
+
+stopAllSoundHard();
+
+updateSoundButton();
+
+}
+
+function wireSoundButton(){
+
+const btn=document.getElementById("soundToggle");
+
+if(!btn){
+return;
+}
+
+let handledByTouch=false;
+
+const trigger=(e)=>{
+
+e.stopPropagation();
+
+e.preventDefault();
+
+if(soundEnabled){
+
+disableSound();
+
+}else{
+
+enableSound();
+
+playClick();
+
+}
+
+};
+
+btn.addEventListener("touchend",(e)=>{
+
+handledByTouch=true;
+
+trigger(e);
+
+setTimeout(()=>{handledByTouch=false;},600);
+
+},{passive:false});
+
+btn.addEventListener("click",(e)=>{
+
+if(handledByTouch){
+
+e.preventDefault();
+
+return;
+
+}
+
+trigger(e);
+
+});
+
+updateSoundButton();
+
+}
+
+
+/* =========================================================
+   THEMES
+========================================================= */
+
+const carThemes=[
+
+{
+name:"SUNSET CITY",
+sky:0xd98f9b,
+ground:0x3a4560,
+road:0x3c4048,
+car:0xff5b4f,
+reward:["🍫","Favorite Chocolate","A sweet reward for finishing your day!"]
+},
+
+{
+name:"MIDNIGHT STREET",
+sky:0x142b52,
+ground:0x25314a,
+road:0x2b3346,
+car:0x4e9cff,
+reward:["🍪","Favorite Cookies","A little treat for a big win!"]
+},
+
+{
+name:"NEON NIGHT RACE",
+sky:0x6b256d,
+ground:0x2a1e3d,
+road:0x241c33,
+car:0xe65cff,
+reward:["🍕","Favorite Pizza","You earned a delicious victory meal!"]
+},
+
+{
+name:"SNOWY MOUNTAIN",
+sky:0xcfe6f3,
+ground:0x9fb3bb,
+road:0x5f6b70,
+car:0xf7f9ff,
+reward:["☕","Hot Chocolate","Warm reward for a cool victory!"]
+},
+
+{
+name:"FOREST ROAD",
+sky:0xb9cf9a,
+ground:0x496a4c,
+road:0x39442f,
+car:0x5ee58b,
+reward:["🍦","Favorite Ice Cream","A sweet finish to your journey!"]
+},
+
+{
+name:"DESERT GRAND PRIX",
+sky:0xf5c07a,
+ground:0x8a6a4a,
+road:0x5b4a38,
+car:0xff9e45,
+reward:["🧁","Favorite Cupcake","A tiny celebration for your progress!"]
+},
+
+{
+name:"TROPICAL COAST",
+sky:0xa7e4d2,
+ground:0x3d7357,
+road:0x2c4a3c,
+car:0xffe64c,
+reward:["🍬","Favorite Candy","You made it! Enjoy your reward!"]
+}
+
+];
+
+
+const footballThemes=[
+
+{
+name:"SUNSET STADIUM",
+sky:0xd98f9b,
+pitch:0x2f8a4d,
+jersey:0xff5b4f,
+reward:["🍫","Favorite Chocolate","A sweet reward for finishing your day!"]
+},
+
+{
+name:"NIGHT MATCH UNDER LIGHTS",
+sky:0x142b52,
+pitch:0x1f6a3f,
+jersey:0x4e9cff,
+reward:["🍪","Favorite Cookies","A little treat for a big win!"]
+},
+
+{
+name:"NEON ARENA CUP",
+sky:0x6b256d,
+pitch:0x235c40,
+jersey:0xe65cff,
+reward:["🍕","Favorite Pizza","You earned a delicious victory meal!"]
+},
+
+{
+name:"SNOW FIELD SHOWDOWN",
+sky:0xcfe6f3,
+pitch:0xdceadf,
+jersey:0xf7f9ff,
+reward:["☕","Hot Chocolate","Warm reward for a cool victory!"]
+},
+
+{
+name:"FOREST SIDE PITCH",
+sky:0xb9cf9a,
+pitch:0x2e6b3a,
+jersey:0x5ee58b,
+reward:["🍦","Favorite Ice Cream","A sweet finish to your journey!"]
+},
+
+{
+name:"DESERT DUST CUP",
+sky:0xf5c07a,
+pitch:0xb08a52,
+jersey:0xff9e45,
+reward:["🧁","Favorite Cupcake","A tiny celebration for your progress!"]
+},
+
+{
+name:"TROPICAL BEACH CUP",
+sky:0xa7e4d2,
+pitch:0xdccf9a,
+jersey:0xffe64c,
+reward:["🍬","Favorite Candy","You made it! Enjoy your reward!"]
+}
+
+];
+
+const bicycleThemes=[
+
+{
+name:"SUNSET TRAIL",
+sky:0xd98f9b,
+ground:0x3a4560,
+path:0x6b5335,
+bike:0xff5b4f,
+reward:["🍫","Favorite Chocolate","A sweet reward for finishing your day!"]
+},
+
+{
+name:"MIDNIGHT RIDE",
+sky:0x142b52,
+ground:0x25314a,
+path:0x3a3220,
+bike:0x4e9cff,
+reward:["🍪","Favorite Cookies","A little treat for a big win!"]
+},
+
+{
+name:"NEON CITY LOOP",
+sky:0x6b256d,
+ground:0x2a1e3d,
+path:0x2e2440,
+bike:0xe65cff,
+reward:["🍕","Favorite Pizza","You earned a delicious victory meal!"]
+},
+
+{
+name:"SNOWY PASS",
+sky:0xcfe6f3,
+ground:0x9fb3bb,
+path:0x738089,
+bike:0xf7f9ff,
+reward:["☕","Hot Chocolate","Warm reward for a cool victory!"]
+},
+
+{
+name:"FOREST TRAIL",
+sky:0xb9cf9a,
+ground:0x496a4c,
+path:0x5a4a30,
+bike:0x5ee58b,
+reward:["🍦","Favorite Ice Cream","A sweet finish to your journey!"]
+},
+
+{
+name:"DESERT RIDE",
+sky:0xf5c07a,
+ground:0x8a6a4a,
+path:0x6e5638,
+bike:0xff9e45,
+reward:["🧁","Favorite Cupcake","A tiny celebration for your progress!"]
+},
+
+{
+name:"TROPICAL COASTLINE",
+sky:0xa7e4d2,
+ground:0x3d7357,
+path:0x4a3c2a,
+bike:0xffe64c,
+reward:["🍬","Favorite Candy","You made it! Enjoy your reward!"]
+}
+
+];
+
+function currentThemeSet(){
+
+if(week===2){
+return footballThemes;
+}
+
+if(week===3){
+return bicycleThemes;
+}
+
+return carThemes;
+
+}
+
+
+/* =========================================================
+   LEVEL SYSTEM
+   28-DAY CHALLENGE
+   Each level has a coin target AND a grand reward that
+   must be claimed once (permanently) after unlocking.
+========================================================= */
+
+const levels=[
+
+{name:"Silver",min:200,icon:"🥈",
+reward:["🎮","Gaming Session","Enjoy an extra hour of your favorite game!"]},
+
+{name:"Gold",min:450,icon:"🥇",
+reward:["🍔","Favorite Meal","Treat yourself to your favorite meal out!"]},
+
+{name:"Platinum",min:800,icon:"💠",
+reward:["👕","New Outfit","Get yourself something new to wear!"]},
+
+{name:"Diamond",min:1250,icon:"💎",
+reward:["🎬","Movie Night","Enjoy a movie night, your pick!"]},
+
+{name:"Good Boy",min:1800,icon:"🌟",
+reward:["🎈","Fun Day Out","Plan a fun day out for yourself!"]},
+
+{name:"Super Umar",min:2500,icon:"🔥",
+reward:["🎁","Big Surprise Gift","You deserve a big surprise gift!"]},
+
+{name:"Legend",min:3500,icon:"👑",
+reward:["👑","Ultimate Champion Reward","You're a Legend! Treat yourself to something amazing!"]}
+
+];
+
+
+function getLevel(coins){
+
+let current=null;
+let idx=-1;
+
+for(let i=0;i<levels.length;i++){
+
+if(coins>=levels[i].min){
+current=levels[i];
+idx=i;
+}
+
+}
+
+if(!current){
+
+return{
+name:"Unranked",
+icon:"🔒",
+min:0,
+index:0,
+next:levels[0]
+};
+
+}
+
+return{
+name:current.name,
+icon:current.icon,
+min:current.min,
+index:idx+1,
+next:levels[idx+1]||null
+};
+
+}
+
+
+/* =========================================================
+   STORAGE
+========================================================= */
+
+const STORAGE_VERSION="v2";
+
+let week=+(localStorage.getItem("hrWeek")||1);
+let day=+(localStorage.getItem("hrDay")||1);
+
+function key(){
+return `habitRace_${STORAGE_VERSION}_${week}_${day}`;
+}
+
+function secretKey(){
+return `secretRace_${STORAGE_VERSION}_${week}_${day}`;
+}
+
+function getData(){
+
+try{
+
+const d=JSON.parse(
+localStorage.getItem(key())||
+"[false,false,false,false,false,false,false]"
+);
+
+return Array.isArray(d)&&d.length===7
+?d
+:[false,false,false,false,false,false,false];
+
+}catch(e){
+
+return [false,false,false,false,false,false,false];
+
+}
+
+}
+
+function save(d){
+localStorage.setItem(key(),JSON.stringify(d));
+}
+
+function getSecret(){
+
+try{
+
+const s=JSON.parse(
+localStorage.getItem(secretKey())||
+"[false,false,false]"
+);
+
+return Array.isArray(s)&&s.length===3
+?s
+:[false,false,false];
+
+}catch(e){
+
+return [false,false,false];
+
+}
+
+}
+
+function saveSecret(s){
+localStorage.setItem(secretKey(),JSON.stringify(s));
+}
+
+
+/* =========================================================
+   SUBMITTED DAYS
+========================================================= */
+
+function submittedKey(){
+return `submitted_${STORAGE_VERSION}_${week}_${day}`;
+}
+
+function isSubmitted(){
+return localStorage.getItem(submittedKey())==="1";
+}
+
+function setSubmitted(){
+localStorage.setItem(submittedKey(),"1");
+}
+
+
+/* =========================================================
+   SEQUENTIAL DAY / WEEK LOCKING
+   A day/week can only be opened once everything before it
+   (in order, Week1-Day1 ... Week4-Day7) has been submitted.
+   Once a day is submitted it can never be edited again.
+========================================================= */
+
+function isDaySubmitted(w,d){
+return localStorage.getItem(`submitted_${STORAGE_VERSION}_${w}_${d}`)==="1";
+}
+
+function globalIndex(w,d){
+return (w-1)*7+d;
+}
+
+function isDayUnlocked(w,d){
+
+const idx=globalIndex(w,d);
+
+if(idx<=1){
+return true;
+}
+
+const prevIdx=idx-1;
+
+const pw=Math.floor((prevIdx-1)/7)+1;
+
+const pd=((prevIdx-1)%7)+1;
+
+return isDaySubmitted(pw,pd);
+
+}
+
+function isWeekUnlocked(w){
+
+if(w<=1){
+return true;
+}
+
+return isDaySubmitted(w-1,7);
+
+}
+
+function resolveUnlockedPosition(){
+
+if(!isWeekUnlocked(week)){
+
+week=1;
+
+localStorage.setItem("hrWeek",week);
+
+}
+
+if(!isDayUnlocked(week,day)){
+
+let target=1;
+
+for(let d=1;d<=7;d++){
+
+if(isDayUnlocked(week,d)){
+target=d;
+}
+
+}
+
+day=target;
+
+localStorage.setItem("hrDay",day);
+
+}
+
+}
+
+
+/* =========================================================
+   REWARD STORAGE
+========================================================= */
+
+function rewardKey(){
+return `rewardClaimed_${STORAGE_VERSION}_${week}_${day}`;
+}
+
+function secretRewardKey(){
+return `secretRewardClaimed_${STORAGE_VERSION}_${week}_${day}`;
+}
+
+function isRewardClaimed(){
+return localStorage.getItem(rewardKey())==="1";
+}
+
+function isSecretRewardClaimed(){
+return localStorage.getItem(secretRewardKey())==="1";
+}
+
+
+/* =========================================================
+   LEVEL REWARD STORAGE (permanent, not tied to day/week)
+========================================================= */
+
+function levelKey(name){
+return `levelClaimed_${STORAGE_VERSION}_${name.replace(/\s+/g,"_")}`;
+}
+
+function isLevelClaimed(name){
+return localStorage.getItem(levelKey(name))==="1";
+}
+
+function setLevelClaimed(name){
+localStorage.setItem(levelKey(name),"1");
+}
+
+
+/* =========================================================
+   COINS
+========================================================= */
+
+function getCoins(){
+
+return Math.max(
+0,
+Number(localStorage.getItem("hrCoinsTotal")||0)
+);
+
+}
+
+function setCoins(total){
+
+total=Math.max(0,Math.floor(total));
+
+localStorage.setItem(
+"hrCoinsTotal",
+String(total)
+);
+
+renderCoins();
+
+}
+
+function addCoins(amount){
+
+const total=getCoins();
+
+setCoins(total+amount);
+
+}
+
+
+/* =========================================================
+   COIN TRANSACTION PROTECTION
+========================================================= */
+
+function transactionKey(type,index){
+
+return `coinTx_${STORAGE_VERSION}_${week}_${day}_${type}_${index}`;
+
+}
+
+function giveOnce(type,index,amount){
+
+const k=transactionKey(type,index);
+
+if(localStorage.getItem(k)==="1"){
+return false;
+}
+
+localStorage.setItem(k,"1");
+
+addCoins(amount);
+
+return true;
+
+}
+
+function removeOnce(type,index,amount){
+
+const k=transactionKey(type,index);
+
+if(localStorage.getItem(k)!=="1"){
+return false;
+}
+
+localStorage.removeItem(k);
+
+addCoins(-amount);
+
+return true;
+
+}
+
+
+/* =========================================================
+   LEVEL RENDER (sidebar mini progress)
+========================================================= */
+
+function renderCoins(){
+
+const total=getCoins();
+
+const lvl=getLevel(total);
+
+document.getElementById("coinsTotal").textContent=total;
+
+document.getElementById("topCoins").textContent=total;
+
+document.getElementById("levelName").textContent=
+`${lvl.icon} Level ${lvl.index} • ${lvl.name}`;
+
+if(lvl.next){
+
+const base=lvl.index===0?0:lvl.min;
+
+const span=Math.max(1,lvl.next.min-base);
+
+const progress=Math.max(
+0,
+Math.min(
+100,
+Math.round(((total-base)/span)*100)
+)
+);
+
+document.getElementById("levelBar").style.width=
+progress+"%";
+
+const remaining=Math.max(0,lvl.next.min-total);
+
+document.getElementById("levelSub").textContent=
+`${remaining} coins to ${lvl.next.name}`;
+
+}else{
+
+document.getElementById("levelBar").style.width="100%";
+
+document.getElementById("levelSub").textContent=
+"🏆 Maximum level — LEGEND!";
+
+}
+
+renderLevels();
+
+}
+
+
+/* =========================================================
+   LEVEL REWARDS PANEL (7 levels, claimable grand rewards)
+========================================================= */
+
+function renderLevels(){
+
+const total=getCoins();
+
+const el=document.getElementById("levelsList");
+
+if(!el){
+return;
+}
+
+el.innerHTML="";
+
+levels.forEach(lv=>{
+
+const unlocked=total>=lv.min;
+
+const claimed=isLevelClaimed(lv.name);
+
+const row=document.createElement("div");
+
+row.className=
+"levelRow "+
+(claimed?"claimed":(unlocked?"unlocked":""));
+
+row.innerHTML=`
+<div class="levelIcon">${lv.icon}</div>
+<div class="levelInfo">
+<div class="levelRowName">${lv.name}</div>
+<div class="levelRowTarget">${lv.min} coins</div>
+</div>
+<button class="levelBtn ${claimed?"claimedBtn":""}" ${(!unlocked||claimed)?"disabled":""}>
+${claimed?"✅ Claimed":(unlocked?"🎁 Claim":"🔒 Locked")}
+</button>
+`;
+
+const btn=row.querySelector(".levelBtn");
+
+btn.onclick=()=>{
+playClick();
+claimLevel(lv);
+};
+
+el.appendChild(row);
+
+});
+
+}
+
+function claimLevel(lv){
+
+if(isLevelClaimed(lv.name)){
+return;
+}
+
+if(getCoins()<lv.min){
+return;
+}
+
+setLevelClaimed(lv.name);
+
+playRewardSound();
+
+renderLevels();
+
+openLevelReward(lv);
+
+show(`${lv.icon} ${lv.name} level unlocked!`);
+
+}
+
+function openLevelReward(lv){
+
+document.getElementById("levelRewardEmoji").textContent=
+lv.reward[0];
+
+document.getElementById("levelRewardTitle").textContent=
+lv.reward[1];
+
+document.getElementById("levelRewardText").textContent=
+lv.reward[2];
+
+document
+.getElementById("levelRewardPopup")
+.classList.add("show");
+
+}
+
+document
+.getElementById("levelRewardClose")
+.onclick=()=>{
+
+playClick();
+
+document
+.getElementById("levelRewardPopup")
+.classList.remove("show");
+
+};
+
+
+/* =========================================================
+   SECRET MISSIONS
+========================================================= */
+
+function renderSecrets(){
+
+const s=getSecret();
+
+const el=document.getElementById("secretList");
+
+el.innerHTML="";
+
+s.forEach((done,i)=>{
+
+const r=document.createElement("div");
+
+r.className=
+"secretItem "+(done?"done":"");
+
+r.innerHTML=`
+<div class="secretIcon">🕵️</div>
+<div class="secretText">
+Secret Mission ${i+1}
+</div>
+<div class="secretCheck">
+${done?"✓":""}
+</div>
+`;
+
+r.onclick=()=>{
+toggleSecret(i);
+};
+
+el.appendChild(r);
+
+});
+
+const allDone=s.every(Boolean);
+
+const claimed=isSecretRewardClaimed();
+
+document
+.getElementById("secretReward")
+.classList.toggle(
+"show",
+allDone&&!claimed
+);
+
+const secretClaimBtn=
+document.getElementById("secretClaim");
+
+const secretCloseBtn=
+document.getElementById("secretRewardClose");
+
+if(secretClaimBtn&&secretCloseBtn){
+
+secretClaimBtn.style.display=
+claimed?"none":"inline-block";
+
+secretCloseBtn.style.display="none";
+
+}
+
+}
+
+
+function toggleSecret(i){
+
+playClick();
+
+if(isSubmitted()){
+
+show("🔒 Day already submitted!");
+
+return;
+
+}
+
+const s=getSecret();
+
+const old=s[i];
+
+s[i]=!old;
+
+saveSecret(s);
+
+if(s[i]){
+
+giveOnce("secret",i,15);
+
+show("🕵️ Secret mission complete! +15 coins");
+
+}else{
+
+removeOnce("secret",i,15);
+
+show("Secret mission unchecked");
+
+}
+
+renderSecrets();
+
+renderCoins();
+
+}
+
+
+/* =========================================================
+   SECRET BONUS (claim + close, does not re-render
+   the box away instantly so the confirmation is visible)
+========================================================= */
+
+document
+.getElementById("secretClaim")
+.onclick=()=>{
+
+playClick();
+
+const s=getSecret();
+
+if(!s.every(Boolean)){
+return;
+}
+
+if(isSecretRewardClaimed()){
+return;
+}
+
+localStorage.setItem(
+secretRewardKey(),
+"1"
+);
+
+addCoins(45);
+
+playRewardSound();
+
+document.getElementById("secretClaim").style.display="none";
+
+document.getElementById("secretRewardClose").style.display="inline-block";
+
+show("🥨 Snack reward claimed! +45 bonus coins");
+
+};
+
+document
+.getElementById("secretRewardClose")
+.onclick=()=>{
+
+playClick();
+
+document
+.getElementById("secretReward")
+.classList.remove("show");
+
+};
+
+
+/* =========================================================
+   HABITS
+========================================================= */
+
+function renderHabits(){
+
+const data=getData();
+
+const el=document.getElementById("habits");
+
+el.innerHTML="";
+
+habits.forEach((h,i)=>{
+
+const r=document.createElement("div");
+
+r.className=
+"habit "+(data[i]?"done":"");
+
+r.innerHTML=`
+<div class="icon">${h[0]}</div>
+<div class="ht">
+${h[1]}<br>${h[2]}
+</div>
+<div class="check">
+${data[i]?"✓":""}
+</div>
+`;
+
+r.onclick=()=>{
+toggle(i);
+};
+
+el.appendChild(r);
+
+});
+
+}
+
+
+/* =========================================================
+   TOGGLE HABIT
+========================================================= */
+
+function toggle(i){
+
+playClick();
+
+if(isSubmitted()){
+
+show("🔒 This day has already been submitted!");
+
+return;
+
+}
+
+const d=getData();
+
+const old=d[i];
+
+d[i]=!old;
+
+save(d);
+
+if(d[i]){
+
+giveOnce("habit",i,5);
+
+}else{
+
+removeOnce("habit",i,5);
+
+}
+
+renderHabits();
+
+update();
+
+build3DScene();
+
+if(d[i]){
+
+playEngineRev();
+
+if(week===2&&lastBall){
+
+show("⚽ Nice kick! +5 coins");
+
+}else{
+
+show("🏁 Habit complete! +5 coins");
+
+}
+
+if(d.every(Boolean)){
+
+playRewardSound();
+
+speakWellDoneUmar();
+
+}
+
+}
+
+}
+
+
+/* =========================================================
+   SUBMIT DAY
+========================================================= */
+
+document
+.getElementById("submitDay")
+.onclick=()=>{
+
+playClick();
+
+if(isSubmitted()){
+
+show("✅ This day is already submitted!");
+
+return;
+
+}
+
+const d=getData();
+
+const done=d.filter(Boolean).length;
+
+/* Day is submitted (and locked) no matter how many habits
+   were completed. Coins for whichever habits were ticked
+   were already credited the moment they were checked, so
+   nothing extra needs to be added here — partial progress
+   still counts toward the grand total. */
+
+setSubmitted();
+
+document
+.getElementById("submitDay")
+.classList.add("submitted");
+
+document
+.getElementById("submitDay")
+.textContent="✅ DAY SUBMITTED";
+
+update();
+
+renderDays();
+
+renderWeeks();
+
+if(done<7){
+
+playMissSound();
+
+document.getElementById("missPopupText").textContent=
+`You completed ${done}/7 habits today. Your ${done*5} coin(s) from today are safely added to your total. Better luck next time — tomorrow is a fresh start! 💪`;
+
+document
+.getElementById("missPopup")
+.classList.add("show");
+
+}else{
+
+show(
+week===2
+?"⚽ GOAL! Day submitted successfully!"
+:"🏁 Day submitted successfully!"
+);
+
+}
+
+};
+
+
+/* =========================================================
+   POPUP CLOSE
+========================================================= */
+
+document
+.getElementById("missPopupClose")
+.onclick=()=>{
+
+playClick();
+
+document
+.getElementById("missPopup")
+.classList.remove("show");
+
+};
+
+
+/* =========================================================
+   DAY REWARD: claim shows the gift and a Done button.
+   The panel is NOT force-closed by update() while the
+   gift is being shown -- it only closes when the user
+   presses Done, so the reward is always actually seen.
+========================================================= */
+
+document
+.getElementById("claim")
+.onclick=()=>{
+
+playClick();
+
+if(!isSubmitted()){
+show("⚠️ Submit the day first!");
+return;
+}
+
+if(isRewardClaimed()){
+return;
+}
+
+localStorage.setItem(
+rewardKey(),
+"1"
+);
+
+playRewardSound();
+
+document
+.getElementById("gift")
+.classList.add("show");
+
+document.getElementById("claim").style.display="none";
+
+document.getElementById("rewardDone").style.display="inline-block";
+
+show("🎁 Daily reward unlocked!");
+
+};
+
+document
+.getElementById("rewardDone")
+.onclick=()=>{
+
+playClick();
+
+document
+.getElementById("reward")
+.classList.remove("show");
+
+};
+
+
+/* =========================================================
+   UPDATE PROGRESS
+========================================================= */
+
+function update(){
+
+const data=getData();
+
+const done=data.filter(Boolean).length;
+
+const pct=Math.round(
+done*100/7
+);
+
+document.getElementById("count").textContent=
+`${done}/7`;
+
+document.getElementById("pct").textContent=
+pct+"%";
+
+document.getElementById("bar").style.width=
+pct+"%";
+
+document.getElementById("sideDay").textContent=
+day;
+
+const reward=document.getElementById("reward");
+
+const claimed=isRewardClaimed();
+
+reward.classList.toggle(
+"show",
+done===7&&isSubmitted()&&!claimed
+);
+
+/* keep claim/gift/done states in sync with reality
+   every time the day is (re)rendered */
+
+document.getElementById("gift").classList.remove("show");
+
+document.getElementById("claim").style.display="inline-block";
+
+document.getElementById("rewardDone").style.display="none";
+
+const btn=document.getElementById("submitDay");
+
+if(isSubmitted()){
+
+btn.classList.add("submitted");
+
+btn.textContent="✅ DAY SUBMITTED";
+
+}else{
+
+btn.classList.remove("submitted");
+
+btn.textContent="🏁 SUBMIT DAY";
+
+}
+
+}
+
+
+/* =========================================================
+   DAYS
+========================================================= */
+
+function renderDays(){
+
+const el=document.getElementById("days");
+
+el.innerHTML="";
+
+for(let d=1;d<=7;d++){
+
+const unlocked=isDayUnlocked(week,d);
+
+const b=document.createElement("button");
+
+b.className=
+"dayBtn "+
+(d===day?"active":"")+
+(unlocked?"":" locked");
+
+b.textContent=
+(unlocked?"":"🔒 ")+"DAY "+d;
+
+b.onclick=()=>{
+
+playClick();
+
+if(!unlocked){
+
+show("🔒 Submit the previous day first!");
+
+return;
+
+}
+
+day=d;
+
+localStorage.setItem(
+"hrDay",
+day
+);
+
+renderAll();
+
+};
+
+el.appendChild(b);
+
+}
+
+}
+
+
+/* =========================================================
+   WEEKS
+========================================================= */
+
+function renderWeeks(){
+
+const el=document.getElementById("weeks");
+
+el.innerHTML="";
+
+for(let w=1;w<=4;w++){
+
+const unlocked=isWeekUnlocked(w);
+
+const b=document.createElement("button");
+
+b.className=
+"weekBtn "+
+(w===week?"active":"")+
+(unlocked?"":" locked");
+
+b.textContent=
+(unlocked?"":"🔒 ")+"WEEK "+w;
+
+b.onclick=()=>{
+
+playClick();
+
+if(!unlocked){
+
+show("🔒 Finish the previous week first!");
+
+return;
+
+}
+
+week=w;
+
+if(week!==+(localStorage.getItem("hrWeek")||1)){
+
+day=1;
+
+}
+
+localStorage.setItem(
+"hrWeek",
+week
+);
+
+localStorage.setItem(
+"hrDay",
+day
+);
+
+renderAll();
+
+};
+
+el.appendChild(b);
+
+}
+
+}
+
+
+/* =========================================================
+   LABELS
+========================================================= */
+
+function renderSceneLabels(){
+
+const t=currentThemeSet()[day-1];
+
+document.getElementById("themeLabel").textContent=
+`DAY ${day} • ${t.name}`;
+
+document.getElementById("banner").textContent=
+`WEEK ${week}`;
+
+document.getElementById("weekTag").textContent=
+week===2
+?"⚽ FOOTBALL MODE"
+:week===3
+?"🚴 CYCLING MODE"
+:"🏁 RACE MODE";
+
+document.getElementById("giftEmoji").textContent=
+t.reward[0];
+
+document.getElementById("giftTitle").textContent=
+t.reward[1];
+
+document.getElementById("giftText").textContent=
+t.reward[2];
+
+}
+
+
+/* =========================================================
+   RESET CURRENT DAY
+========================================================= */
+
+document
+.getElementById("reset")
+.onclick=()=>{
+
+playClick();
+
+const confirmed=confirm(
+"Reset this day's habits and secret missions? Your total coins and other days will stay safe."
+);
+
+if(!confirmed){
+return;
+}
+
+const oldHabits=getData();
+
+oldHabits.forEach((done,i)=>{
+
+if(done){
+removeOnce("habit",i,5);
+}
+
+});
+
+const oldSecrets=getSecret();
+
+oldSecrets.forEach((done,i)=>{
+
+if(done){
+removeOnce("secret",i,15);
+}
+
+});
+
+save([
+false,false,false,false,false,false,false
+]);
+
+saveSecret([
+false,false,false
+]);
+
+localStorage.removeItem(
+submittedKey()
+);
+
+localStorage.removeItem(
+rewardKey()
+);
+
+localStorage.removeItem(
+secretRewardKey()
+);
+
+document
+.getElementById("gift")
+.classList.remove("show");
+
+renderAll();
+
+show("🔄 Current day reset!");
+
+};
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+let messageTimer=null;
+
+function show(txt){
+
+const m=document.getElementById("message");
+
+m.textContent=txt;
+
+m.classList.add("show");
+
+clearTimeout(messageTimer);
+
+messageTimer=setTimeout(()=>{
+
+m.classList.remove("show");
+
+},1600);
+
+}
+
+
+/* =========================================================
+   THREE.JS
+========================================================= */
+
+let scene3d,
+camera3d,
+renderer3d;
+
+let lastCar=null,
+lastPlayer=null,
+lastBall=null;
+
+let bounceTarget=null,
+bounceStart=0;
+
+let kickAnim=null;
+
+const stepsZ=[
+7.5,
+5.1,
+2.8,
+0.4,
+-1.9,
+-4.3,
+-6.6,
+-9
+];
+
+
+function initThree(){
+
+const canvas=
+document.getElementById("three-canvas");
+
+scene3d=new THREE.Scene();
+
+camera3d=
+new THREE.PerspectiveCamera(
+45,
+1,
+0.1,
+100
+);
+
+camera3d.position.set(
+0,
+6,
+14
+);
+
+camera3d.lookAt(
+0,
+0.5,
+-3
+);
+
+renderer3d=
+new THREE.WebGLRenderer({
+canvas,
+antialias:true
+});
+
+resizeThree();
+
+if(window.ResizeObserver){
+
+new ResizeObserver(
+resizeThree
+).observe(
+document.getElementById("scene")
+);
+
+}else{
+
+window.addEventListener(
+"resize",
+resizeThree
+);
+
+}
+
+window.addEventListener(
+"orientationchange",
+()=>setTimeout(resizeThree,250)
+);
+
+requestAnimationFrame(
+animateThree
+);
+
+}
+
+
+function resizeThree(){
+
+const el=
+document.getElementById("scene");
+
+const w=el.clientWidth;
+const h=el.clientHeight;
+
+if(!w||!h||!renderer3d){
+return;
+}
+
+renderer3d.setSize(
+w,
+h,
+false
+);
+
+renderer3d.setPixelRatio(
+Math.min(
+window.devicePixelRatio||1,
+2
+)
+);
+
+camera3d.aspect=w/h;
+
+camera3d.updateProjectionMatrix();
+
+}
+
+
+function clearScene(){
+
+while(scene3d.children.length){
+
+scene3d.remove(
+scene3d.children[0]
+);
+
+}
+
+}
+
+
+function addLights(
+skyColor,
+groundColor
+){
+
+scene3d.background=
+new THREE.Color(skyColor);
+
+scene3d.fog=
+new THREE.Fog(
+skyColor,
+16,
+40
+);
+
+scene3d.add(
+new THREE.AmbientLight(
+0xffffff,
+0.65
+)
+);
+
+const dir=
+new THREE.DirectionalLight(
+0xffffff,
+0.9
+);
+
+dir.position.set(
+6,
+12,
+6
+);
+
+scene3d.add(dir);
+
+scene3d.add(
+new THREE.HemisphereLight(
+skyColor,
+groundColor,
+0.55
+)
+);
+
+}
+
+
+function buildCarScene(
+idx,
+done
+){
+
+const t=carThemes[idx];
+
+addLights(
+t.sky,
+t.ground
+);
+
+const ground=
+new THREE.Mesh(
+new THREE.PlaneGeometry(
+60,
+60
+),
+new THREE.MeshStandardMaterial({
+color:t.ground
+})
+);
+
+ground.rotation.x=
+-Math.PI/2;
+
+ground.position.y=
+-0.5;
+
+scene3d.add(
+ground
+);
+
+const road=
+new THREE.Mesh(
+new THREE.PlaneGeometry(
+6,
+40
+),
+new THREE.MeshStandardMaterial({
+color:t.road
+})
+);
+
+road.rotation.x=
+-Math.PI/2;
+
+road.position.set(
+0,
+-0.48,
+-6
+);
+
+scene3d.add(
+road
+);
+
+for(let i=0;i<8;i++){
+
+const seg=
+new THREE.Mesh(
+new THREE.PlaneGeometry(
+0.25,
+1.4
+),
+new THREE.MeshStandardMaterial({
+color:0xf3ead1
+})
+);
+
+seg.rotation.x=
+-Math.PI/2;
+
+seg.position.set(
+0,
+-0.47,
+10-i*3.2
+);
+
+scene3d.add(seg);
+
+}
+
+for(let i=0;i<7;i++){
+
+const side=
+i%2===0?-1:1;
+
+const h=
+2+((i*1.7+idx)%4);
+
+const bld=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+1.8,
+h,
+1.8
+),
+new THREE.MeshStandardMaterial({
+color:0x3a4560
+})
+);
+
+bld.position.set(
+side*5.5,
+h/2-0.5,
+10-i*3.2
+);
+
+scene3d.add(bld);
+
+}
+
+const postMat=
+new THREE.MeshStandardMaterial({
+color:0xffffff
+});
+
+const post1=
+new THREE.Mesh(
+new THREE.CylinderGeometry(
+0.15,
+0.15,
+3
+),
+postMat
+);
+
+post1.position.set(
+-3,
+1,
+-11
+);
+
+const post2=
+post1.clone();
+
+post2.position.x=3;
+
+const bar=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+6.3,
+0.3,
+0.3
+),
+new THREE.MeshStandardMaterial({
+color:0xdc3b35
+})
+);
+
+bar.position.set(
+0,
+2.4,
+-11
+);
+
+scene3d.add(
+post1,
+post2,
+bar
+);
+
+const car=
+new THREE.Group();
+
+const body=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+1.6,
+0.6,
+3
+),
+new THREE.MeshStandardMaterial({
+color:t.car
+})
+);
+
+body.position.y=0.4;
+
+const cabin=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+1.2,
+0.5,
+1.4
+),
+new THREE.MeshStandardMaterial({
+color:0x172c47
+})
+);
+
+cabin.position.set(
+0,
+0.85,
+-0.1
+);
+
+car.add(
+body,
+cabin
+);
+
+const wheelGeo=
+new THREE.CylinderGeometry(
+0.35,
+0.35,
+0.3,
+16
+);
+
+[
+[-0.85,0.1,1],
+[0.85,0.1,1],
+[-0.85,0.1,-1],
+[0.85,0.1,-1]
+].forEach(p=>{
+
+const w=
+new THREE.Mesh(
+wheelGeo,
+new THREE.MeshStandardMaterial({
+color:0x111111
+})
+);
+
+w.rotation.z=
+Math.PI/2;
+
+w.position.set(
+p[0],
+p[1],
+p[2]
+);
+
+car.add(w);
+
+});
+
+car.position.set(
+0,
+0,
+stepsZ[
+Math.min(done,7)
+]
+);
+
+car.userData.baseY=0;
+
+scene3d.add(car);
+
+return car;
+
+}
+
+
+function buildFootballScene(
+idx,
+done
+){
+
+const t=footballThemes[idx];
+
+addLights(
+t.sky,
+t.pitch
+);
+
+const pitch=
+new THREE.Mesh(
+new THREE.PlaneGeometry(
+14,
+26
+),
+new THREE.MeshStandardMaterial({
+color:t.pitch
+})
+);
+
+pitch.rotation.x=
+-Math.PI/2;
+
+pitch.position.y=
+-0.5;
+
+scene3d.add(pitch);
+
+for(let i=0;i<7;i++){
+
+const c=
+new THREE.Color(
+t.pitch
+);
+
+if(i%2===0){
+c.multiplyScalar(0.85);
+}
+
+const stripe=
+new THREE.Mesh(
+new THREE.PlaneGeometry(
+14,
+1.9
+),
+new THREE.MeshStandardMaterial({
+color:c
+})
+);
+
+stripe.rotation.x=
+-Math.PI/2;
+
+stripe.position.set(
+0,
+-0.49,
+9-i*3
+);
+
+scene3d.add(stripe);
+
+}
+
+const lineMat=
+new THREE.MeshStandardMaterial({
+color:0xffffff
+});
+
+const sideL=
+new THREE.Mesh(
+new THREE.PlaneGeometry(
+0.15,
+26
+),
+lineMat
+);
+
+sideL.rotation.x=
+-Math.PI/2;
+
+sideL.position.set(
+-6.8,
+-0.48,
+-3
+);
+
+const sideR=
+sideL.clone();
+
+sideR.position.x=6.8;
+
+scene3d.add(
+sideL,
+sideR
+);
+
+const postMat=
+new THREE.MeshStandardMaterial({
+color:0xffffff
+});
+
+const gp1=
+new THREE.Mesh(
+new THREE.CylinderGeometry(
+0.1,
+0.1,
+2.2
+),
+postMat
+);
+
+gp1.position.set(
+-2.2,
+0.6,
+-11
+);
+
+const gp2=
+gp1.clone();
+
+gp2.position.x=2.2;
+
+const gbar=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+4.5,
+0.15,
+0.15
+),
+postMat
+);
+
+gbar.position.set(
+0,
+1.7,
+-11
+);
+
+const net=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+4.4,
+1.6,
+1.2
+),
+new THREE.MeshStandardMaterial({
+color:0xffffff,
+wireframe:true,
+transparent:true,
+opacity:0.5
+})
+);
+
+net.position.set(
+0,
+0.9,
+-11.6
+);
+
+scene3d.add(
+gp1,
+gp2,
+gbar,
+net
+);
+
+const player=
+new THREE.Group();
+
+const torso=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+0.6,
+0.8,
+0.35
+),
+new THREE.MeshStandardMaterial({
+color:t.jersey
+})
+);
+
+torso.position.y=1.1;
+
+const head=
+new THREE.Mesh(
+new THREE.SphereGeometry(
+0.28,
+16,
+16
+),
+new THREE.MeshStandardMaterial({
+color:0xe0b28c
+})
+);
+
+head.position.y=1.75;
+
+const legMat=
+new THREE.MeshStandardMaterial({
+color:0x2b2f3a
+});
+
+const legL=
+new THREE.Mesh(
+new THREE.CylinderGeometry(
+0.13,
+0.13,
+0.8
+),
+legMat
+);
+
+legL.position.set(
+-0.18,
+0.5,
+0
+);
+
+const legR=
+legL.clone();
+
+legR.position.x=0.18;
+
+player.add(
+torso,
+head,
+legL,
+legR
+);
+
+player.position.set(
+0,
+0,
+stepsZ[
+Math.min(done,7)
+]
+);
+
+player.userData.baseY=0;
+
+scene3d.add(player);
+
+const ball=
+new THREE.Mesh(
+new THREE.SphereGeometry(
+0.28,
+16,
+16
+),
+new THREE.MeshStandardMaterial({
+color:0xffffff
+})
+);
+
+ball.position.set(
+0,
+0.28,
+stepsZ[
+Math.min(done,7)
+]-0.9
+);
+
+ball.userData.baseY=0.28;
+
+scene3d.add(ball);
+
+return{
+player,
+ball
+};
+
+}
+
+
+function buildBicycleScene(
+idx,
+done
+){
+
+const t=bicycleThemes[idx];
+
+addLights(
+t.sky,
+t.ground
+);
+
+const ground=
+new THREE.Mesh(
+new THREE.PlaneGeometry(
+60,
+60
+),
+new THREE.MeshStandardMaterial({
+color:t.ground
+})
+);
+
+ground.rotation.x=
+-Math.PI/2;
+
+ground.position.y=
+-0.5;
+
+scene3d.add(ground);
+
+const path=
+new THREE.Mesh(
+new THREE.PlaneGeometry(
+4,
+40
+),
+new THREE.MeshStandardMaterial({
+color:t.path
+})
+);
+
+path.rotation.x=
+-Math.PI/2;
+
+path.position.set(
+0,
+-0.48,
+-6
+);
+
+scene3d.add(path);
+
+for(let i=0;i<8;i++){
+
+const seg=
+new THREE.Mesh(
+new THREE.PlaneGeometry(
+0.18,
+1
+),
+new THREE.MeshStandardMaterial({
+color:0xf3ead1
+})
+);
+
+seg.rotation.x=
+-Math.PI/2;
+
+seg.position.set(
+0,
+-0.47,
+10-i*3.2
+);
+
+scene3d.add(seg);
+
+}
+
+for(let i=0;i<7;i++){
+
+const side=
+i%2===0?-1:1;
+
+const h=
+1.2+((i*0.9+idx)%2);
+
+const tree=
+new THREE.Mesh(
+new THREE.ConeGeometry(
+0.9,
+h,
+8
+),
+new THREE.MeshStandardMaterial({
+color:0x2d7752
+})
+);
+
+tree.position.set(
+side*4.5,
+h/2-0.3,
+10-i*3.2
+);
+
+scene3d.add(tree);
+
+const trunk=
+new THREE.Mesh(
+new THREE.CylinderGeometry(
+0.15,
+0.15,
+0.5
+),
+new THREE.MeshStandardMaterial({
+color:0x5b4a38
+})
+);
+
+trunk.position.set(
+side*4.5,
+-0.45,
+10-i*3.2
+);
+
+scene3d.add(trunk);
+
+}
+
+const flagMat=
+new THREE.MeshStandardMaterial({
+color:0xffffff
+});
+
+const flagPole1=
+new THREE.Mesh(
+new THREE.CylinderGeometry(
+0.08,
+0.08,
+2.6
+),
+flagMat
+);
+
+flagPole1.position.set(
+-2,
+0.8,
+-11
+);
+
+const flagPole2=
+flagPole1.clone();
+
+flagPole2.position.x=2;
+
+const finishBar=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+4.4,
+0.25,
+0.25
+),
+new THREE.MeshStandardMaterial({
+color:0xdc3b35
+})
+);
+
+finishBar.position.set(
+0,
+2,
+-11
+);
+
+scene3d.add(
+flagPole1,
+flagPole2,
+finishBar
+);
+
+const bike=
+new THREE.Group();
+
+const frame=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+0.15,
+0.5,
+1.3
+),
+new THREE.MeshStandardMaterial({
+color:t.bike
+})
+);
+
+frame.position.y=0.65;
+
+const rider=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+0.45,
+0.7,
+0.35
+),
+new THREE.MeshStandardMaterial({
+color:0x172c47
+})
+);
+
+rider.position.set(
+0,
+1.15,
+-0.05
+);
+
+const head=
+new THREE.Mesh(
+new THREE.SphereGeometry(
+0.22,
+16,
+16
+),
+new THREE.MeshStandardMaterial({
+color:0xe0b28c
+})
+);
+
+head.position.set(
+0,
+1.65,
+-0.1
+);
+
+bike.add(
+frame,
+rider,
+head
+);
+
+const wheelGeo=
+new THREE.TorusGeometry(
+0.42,
+0.06,
+8,
+20
+);
+
+const wheelMat=
+new THREE.MeshStandardMaterial({
+color:0x111111
+});
+
+const wheelFront=
+new THREE.Mesh(
+wheelGeo,
+wheelMat
+);
+
+wheelFront.position.set(
+0,
+0.42,
+0.6
+);
+
+const wheelBack=
+wheelFront.clone();
+
+wheelBack.position.z=-0.6;
+
+bike.add(
+wheelFront,
+wheelBack
+);
+
+bike.position.set(
+0,
+0,
+stepsZ[
+Math.min(done,7)
+]
+);
+
+bike.userData.baseY=0;
+
+scene3d.add(bike);
+
+return bike;
+
+}
+
+
+function build3DScene(){
+
+if(!scene3d){
+return;
+}
+
+clearScene();
+
+const data=getData();
+
+const done=data.filter(Boolean).length;
+
+const idx=day-1;
+
+if(week===2){
+
+const r=
+buildFootballScene(
+idx,
+done
+);
+
+lastPlayer=r.player;
+
+lastBall=r.ball;
+
+lastCar=null;
+
+}else if(week===3){
+
+lastCar=
+buildBicycleScene(
+idx,
+done
+);
+
+lastPlayer=null;
+
+lastBall=null;
+
+}else{
+
+lastCar=
+buildCarScene(
+idx,
+done
+);
+
+lastPlayer=null;
+
+lastBall=null;
+
+}
+
+}
+
+
+function animateThree(now){
+
+requestAnimationFrame(
+animateThree
+);
+
+if(bounceTarget){
+
+const t=
+(now-bounceStart)/300;
+
+if(t<1){
+
+bounceTarget.position.y=
+bounceTarget.userData.baseY+
+Math.sin(t*Math.PI)*0.6;
+
+}else{
+
+bounceTarget.position.y=
+bounceTarget.userData.baseY;
+
+bounceTarget=null;
+
+}
+
+}
+
+if(kickAnim){
+
+const t=
+Math.min(
+(now-kickAnim.start)/
+kickAnim.duration,
+1
+);
+
+kickAnim.ball.position.lerpVectors(
+kickAnim.from,
+kickAnim.to,
+t
+);
+
+kickAnim.ball.position.y=
+kickAnim.from.y+
+Math.sin(t*Math.PI)*
+(kickAnim.isGoal?2.2:1.1);
+
+if(t>=1){
+kickAnim=null;
+}
+
+}
+
+if(renderer3d){
+
+renderer3d.render(
+scene3d,
+camera3d
+);
+
+}
+
+}
+
+
+/* =========================================================
+   INITIAL LOAD
+========================================================= */
+
+function renderAll(){
+
+resolveUnlockedPosition();
+
+renderWeeks();
+
+renderDays();
+
+renderHabits();
+
+renderSecrets();
+
+renderSceneLabels();
+
+build3DScene();
+
+update();
+
+renderCoins();
+
+}
+
+initThree();
+
+renderAll();
+
+wireSoundButton();
+
+/* Register the service worker so the app can be installed
+   (Chrome "Add to Home screen" / "Install app") and keeps
+   working reliably even if there's a bad connection. This
+   does not affect saved progress — habit data still lives
+   in the browser's localStorage exactly as before. */
+
+if("serviceWorker" in navigator){
+
+window.addEventListener("load",()=>{
+
+navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
