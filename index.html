@@ -2042,29 +2042,28 @@ return carThemes;
    Each level has a coin target AND a grand reward that
    must be claimed once (permanently) after unlocking.
 ========================================================= */
-
 const levels=[
 
 {name:"Silver",min:200,icon:"🥈",
-reward:["🎮","Gaming Session","Enjoy an extra hour of your favorite game!"]},
+reward:["🎁","1 Wish fulfilled","Umar can have 1 wish fulfilled at home!"]},
 
 {name:"Gold",min:450,icon:"🥇",
-reward:["🍔","Favorite Meal","Treat yourself to your favorite meal out!"]},
+reward:["🧸","Hassam Toy Shop","Pick any toy from Hassam Toy Shop, up to 20 riyal!"]},
 
 {name:"Platinum",min:800,icon:"💠",
-reward:["👕","New Outfit","Get yourself something new to wear!"]},
+reward:["🎁","NEW OUTFIT","Umar can have new OUTFIT"]},
 
 {name:"Diamond",min:1250,icon:"💎",
-reward:["🎬","Movie Night","Enjoy a movie night, your pick!"]},
+reward:["🎢","Inoos Rides","Enjoy a fun day out at Anoos Rides!"]},
 
 {name:"Good Boy",min:1800,icon:"🌟",
-reward:["🎈","Fun Day Out","Plan a fun day out for yourself!"]},
+reward:["🍽️","Dinner at the Garden","Enjoy a special dinner out at the Garden!"]},
 
 {name:"Super Umar",min:2500,icon:"🔥",
-reward:["🎁","Big Surprise Gift","You deserve a big surprise gift!"]},
+reward:["🎡","Sparky's Rides","A fun-filled day at Sparky's Rides!"]},
 
 {name:"Legend",min:3500,icon:"👑",
-reward:["👑","Ultimate Champion Reward","You're a Legend! Treat yourself to something amazing!"]}
+reward:["⚽","Football Shoes","You're a Legend! Time for new football shoes!"]}
 
 ];
 
@@ -3132,6 +3131,10 @@ function renderSceneLabels(){
 
 const t=currentThemeSet()[day-1];
 
+const rewardIdx=(week-1)*7+(day-1);
+
+const r=dailyRewards[rewardIdx];
+
 document.getElementById("themeLabel").textContent=
 `DAY ${day} • ${t.name}`;
 
@@ -3146,13 +3149,13 @@ week===2
 :"🏁 RACE MODE";
 
 document.getElementById("giftEmoji").textContent=
-t.reward[0];
+r[0];
 
 document.getElementById("giftTitle").textContent=
-t.reward[1];
+r[1];
 
 document.getElementById("giftText").textContent=
-t.reward[2];
+r[2];
 
 }
 
